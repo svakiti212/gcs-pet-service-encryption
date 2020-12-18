@@ -19,7 +19,7 @@ public class PGPServiceTest {
 
     @Test
     public void PGPTest() throws IOException, PGPException {
-        String clearMessage = "TestValue";
+        String clearMessage = "DREAMSTATE9663D";
         System.out.println("Starting encryption");
 
         String encMessage = service.encryptLine(clearMessage);
@@ -32,5 +32,14 @@ public class PGPServiceTest {
         System.out.println("Decryption finished.\n" + "Result: " + decryptedMessage);
         Assert.assertEquals(clearMessage, decryptedMessage);
     }
+    @Test
+    public void decrypt() throws IOException, PGPException {
+        String encMessage = "";
+        System.out.println("Starting decryption");
+        String decryptedMessage = service.decryptLine(encMessage);
+
+        System.out.println("Decryption finished.\n" + "Result: " + decryptedMessage);
+    }
+
 
 }

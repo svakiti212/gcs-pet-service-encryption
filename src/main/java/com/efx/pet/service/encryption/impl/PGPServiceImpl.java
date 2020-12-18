@@ -5,12 +5,26 @@ import com.efx.pet.service.encryption.util.PGPCryptoProvider;
 import com.efx.pet.service.encryption.util.PGPCryptoUtil;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openpgp.*;
+import org.bouncycastle.openpgp.PGPCompressedData;
+import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
+import org.bouncycastle.openpgp.PGPEncryptedData;
+import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPLiteralData;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodGenerator;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Date;
@@ -58,7 +72,17 @@ public class PGPServiceImpl implements PGPService {
         cOUT.write(bytes);
         cOUT.close();
         out.close();
-        return new String(encOut.toByteArray(), StandardCharsets.UTF_8);
+        return removeHeader(encOut);
+    }
+
+
+    private String removeHeader(ByteArrayOutputStream encOut) {
+        return new String(encOut.toByteArray(), StandardCharsets.UTF_8)
+            .replace("-----BEGIN PGP MESSAGE-----", "")
+            .replace("Version: BCPG v1.65", "")
+            .replace("-----END PGP MESSAGE-----", "")
+            .replace("\n", "")
+            .replace("\r", "");
     }
 
     public String decryptLine(String encryptedInput) throws IOException, PGPException {
@@ -67,7 +91,6 @@ public class PGPServiceImpl implements PGPService {
             try (
                 InputStream secretKeyStream = classloader.getResourceAsStream(privateKeyLocation);
                 InputStream encryptedInputStream = new ByteArrayInputStream(encryptedInput.getBytes());
-//                 InputStream secretKeyInputStream = new ByteArrayInputStream(privatKeyStream)
             ) {
                 return new PGPCryptoUtil().decrypt(encryptedInputStream, secretKeyStream, passPhrase.toCharArray());
             }

@@ -26,20 +26,22 @@ public class PGPCryptoUtil {
     public String decrypt(InputStream encryptedInputStream, InputStream keyInputStream, char[] passPhrase)
         throws IOException, PGPException {
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (
-            InputStream io = getDecryptedInputStream(encryptedInputStream, keyInputStream, passPhrase);
-            InputStream decompressedInputStream = decompress(io);
-            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
-        ) {
-            Streams.pipeAll(decompressedInputStream, bufferedOutputStream);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            try (
+                InputStream io = getDecryptedInputStream(encryptedInputStream, keyInputStream, passPhrase);
+                InputStream decompressedInputStream = decompress(io);
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+            ) {
+                Streams.pipeAll(decompressedInputStream, bufferedOutputStream);
+            }
+            return new String(outputStream.toByteArray());
         }
-        outputStream.close();
-        return new String(outputStream.toByteArray());
+
     }
 
     private InputStream getDecryptedInputStream(InputStream encryptedInputStream, InputStream keyInputStream,
-                                                       char[] passPhrase) throws IOException, PGPException {
+                                                char[] passPhrase) throws IOException, PGPException {
 
         InputStream decoderEncryptedInputStream = PGPUtil.getDecoderStream(encryptedInputStream);
         InputStream decoderKeyInputStream = PGPUtil.getDecoderStream(keyInputStream);
@@ -56,7 +58,8 @@ public class PGPCryptoUtil {
         PublicKeyDataDecryptorFactory decryptorFactory = (new JcePublicKeyDataDecryptorFactoryBuilder())
             .setProvider(BouncyCastleProvider.PROVIDER_NAME)
             .build(secretKey);
-
+        decoderEncryptedInputStream.close();
+        decoderKeyInputStream.close();
         return publicKeyEncryptedData.getDataStream(decryptorFactory);
     }
 
