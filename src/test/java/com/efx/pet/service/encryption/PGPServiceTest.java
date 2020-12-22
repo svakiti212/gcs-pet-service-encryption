@@ -1,6 +1,7 @@
 package com.efx.pet.service.encryption;
 
 import com.efx.pet.service.encryption.impl.PGPServiceImpl;
+import com.efx.pet.service.encryption.util.URIEncoder;
 import org.bouncycastle.openpgp.PGPException;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,6 +32,8 @@ public class PGPServiceTest {
 
         System.out.println("Decryption finished.\n" + "Result: " + decryptedMessage);
         Assert.assertEquals(clearMessage, decryptedMessage);
+
+        System.out.println(formatURL(URIEncoder.encodeURI(encMessage)));
     }
     @Test
     public void decrypt() throws IOException, PGPException {
@@ -39,6 +42,10 @@ public class PGPServiceTest {
         String decryptedMessage = service.decryptLine(encMessage);
 
         System.out.println("Decryption finished.\n" + "Result: " + decryptedMessage);
+    }
+
+    private String formatURL(String encodedOfferCode){
+        return String.format("https://int-my.equifax.com/consumer-registration/rest/1.0/redirectPartnerTenant?offerCode=%s&offerType=BREACH&lang=EN", encodedOfferCode);
     }
 
 
